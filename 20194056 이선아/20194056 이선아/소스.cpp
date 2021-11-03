@@ -10,24 +10,29 @@ void PrintMenu(int);
 void ChangeTextColor(int);
 
 struct Process {
+	int PID = 0;
+	int priority = 0;
+	int arrivedTime = 0;
+	int waitingTime = 0;
+	int responseTime = 0;
+	int burstTime = 0;
+	int turnaroundTume = 0;
+	int remainTime = 0;
+};
+
+struct GanttData {
 	int PID;
-	int priority;
-	int arrivedTime;
-	int waitingTime;
-	int reponseTime;
-	int burstTime;
-	int turnaroundTume;
-	int remainTime;
+	int runTime;
+	GanttData* next;
 };
 
 class Scheduler {
 protected:
 	int timeSlice;
 	int processCnt;
-	int sum_wait;
-	int sum_reponse;
-	int sum_turnaround;
-	Process* head;
+	Process* process_head;			// 배열로 동적 메모리 할당
+	GanttData* gantt_head;	// 연결 리스트로 동적 메모리 할당
+
 public:
 	Scheduler(){
 		FILE *fp = fopen("data.txt", "r");
@@ -41,7 +46,7 @@ public:
 		processCnt = 0;
 		char buf[256];
 		while (fgets(buf, 256, fp))	processCnt++;
-		head = (Process*)malloc(processCnt * sizeof(Process));
+		process_head = (Process*)malloc(processCnt * sizeof(Process));
 
 		rewind(fp);
 		char* token;
@@ -50,60 +55,197 @@ public:
 			fgets(buf, 256, fp);
 			
 			token = strtok(buf, "/");	
-			head[i].PID = atoi(token);
+			process_head[i].PID = atoi(token);
 			
 			token = strtok(NULL, "/");
-			head[i].arrivedTime = atoi(token);
+			process_head[i].arrivedTime = atoi(token);
 			
 			token = strtok(NULL, "/");
-			head[i].burstTime = atoi(token);
+			process_head[i].burstTime = atoi(token);
+			process_head[i].remainTime = process_head[i].burstTime;
 
-			head[i].priority = atoi(buf);	// 마지막 데이터
+			process_head[i].priority = atoi(buf);	// 마지막 데이터
 		}
 		fclose(fp);
-
-		sum_wait = 0;
-		sum_reponse = 0;
-		sum_turnaround = 0;
 	}
 	~Scheduler() {
-		free(head);
+		free(process_head);
 	}
-
-	int GetTimeSlice() {
-		return timeSlice;
-	}
-	void SetTimeSlice(int value) {
-		timeSlice = value;
-	}
-
+	
 	void PrintData() {
 		cout << " +-----+----------+----------+----------+" << std::endl;
 		cout << " | PID | 도착시간 | 실행시간 | 우선순위 |" << std::endl;
 		cout << " +-----+----------+----------+----------+" << std::endl;
 
 		for (int i = 0; i < processCnt; i++) {
-			printf(" | %3d | %8d | %8d | %8d |\n", head[i].PID, head[i].arrivedTime, head[i].burstTime, head[i].priority);
+			printf(" | %3d | %8d | %8d | %8d |\n", process_head[i].PID, process_head[i].arrivedTime, process_head[i].burstTime, process_head[i].priority);
 		}
 		cout << " +-----+----------+----------+----------+" << std::endl;
 	}
 
-	virtual void PrintResult() = 0;
+	void AskTimeSlice() {
+		PrintData();
+
+		ChangeTextColor(6);
+		cout << " 타임 슬라이스 크기 >> ";
+		cin >> timeSlice;
+
+		system("cls");
+	}
+
+	void PrintTable() {
+		float sum_wait = 0;
+		float sum_response = 0;
+		float sum_turnaround = 0;
+
+		// 대기시간, 응답시간, 반환시간
+		// 각 프로세스
+		cout << " +-----+----------+----------+----------+" << std::endl;
+		cout << " | PID | 대기시간 | 응답시간 | 반환시간 |" << std::endl;
+		cout << " +-----+----------+----------+----------+" << std::endl;
+
+		for (int i = 0; i < processCnt; i++) {
+			printf(" | %3d | %8d | %8d | %8d |\n", process_head[i].PID, process_head[i].waitingTime, process_head[i].responseTime, process_head[i].turnaroundTume);
+			sum_wait += process_head[i].waitingTime;
+			sum_response += process_head[i].responseTime;
+			sum_turnaround += process_head[i].turnaroundTume;
+		}
+		cout << " +-----+----------+----------+----------+\n" << std::endl;
+
+		// 평균
+		cout << " 평균 대기시간 AWT: " << sum_wait << " / " << processCnt << " = " << sum_wait / processCnt << std::endl;
+		cout << " 평균 응답시간 ART: " << sum_response << " / " << processCnt << " = " << sum_response / processCnt << std::endl;
+		cout << " 평균 반환시간 ATT: " << sum_turnaround << " / " << processCnt << " = " << sum_turnaround / processCnt << std::endl;
+	}
+	void DrawGanttChart() {
+		int currentTime = 0;
+		int colorValue[] = { 10, 11, 12, 13, 14 };
+		int colorTop = 0;
+		int colorLength = 5;
+
+		GanttData* p = gantt_head;
+		// |-------|----
+		// |  P 1  | 
+		// |-------|----
+		// 0       5
+		
+		while(p!=NULL){
+		cout << "|";
+		while (p != NULL) {
+			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << "-";
+			cout << "--";
+			p = p->next;
+			ChangeTextColor(8);
+			cout << "|";
+		}
+		
+		p = gantt_head;
+		colorTop = 0;
+		ChangeTextColor(15);
+		cout << "\n|";
+		while (p != NULL) {
+			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
+			for (int i = 0; i < p->runTime / 2; i = i + 2)	cout << " ";
+			printf("P%d", p->PID);
+			for (int i = 0; i < p->runTime / 2; i = i + 2)	cout << " ";
+			p = p->next;
+			ChangeTextColor(8);
+			cout << "|";
+		}
+
+		p = gantt_head;
+		colorTop = 0;
+		ChangeTextColor(15);
+		cout << "\n|";
+		while (p != NULL) {
+			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << "-";
+			cout << "--";
+			p = p->next;
+			ChangeTextColor(8);
+			cout << "|";
+		}
+
+		// 시간 표시
+		p = gantt_head;
+		ChangeTextColor(15);
+		cout << "\n0";
+		while (p != NULL) {
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			currentTime += p->runTime;
+			printf("  %2d", currentTime);
+			p = p->next;
+		}
+		}
+		cout << std::endl;
+
+		// 동적 할당 메모리 해제
+		GanttData* next;
+		p = gantt_head;
+		while (p != NULL) {
+			next = p->next;
+			free(p);
+			p = next;
+		}
+	}
+
+	GanttData* InsertGanttNode(GanttData* head,int pid, int time) {
+		if (head == NULL) {
+			gantt_head = new GanttData{ pid, time };
+			return gantt_head;
+		}
+		GanttData* newNode = new GanttData{ pid, time };
+		head->next = newNode;
+		return head->next;
+	}
+
+	virtual void Sceduling() = 0;
 };
 
 class FCFS : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
+		// 도착한 순서대로 CPU를 할당 - 비선점형
 		ChangeTextColor(11);
 		cout << " [ FCFS ]" << std::endl;
 		ChangeTextColor(15);
 
-		
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		int minTime = 0;
+		for (int i = 0; i < processCnt; i++) {
+			// minTime 설정
+			for(int j=0;j<processCnt;j++)
+				if (process_head[j].remainTime != 0) {
+					minTime = j;
+					break;
+				}
+			
+			for (int j = 0; j < processCnt; j++) {
+				if (process_head[j].remainTime != 0) {
+					if (process_head[j].arrivedTime <= process_head[minTime].arrivedTime) {
+						// 도착 시간이 가장 빠른 프로세스 구하기
+						minTime = j;
+					}
+				}
+			}
+			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
+			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 잘 모르겟다 응답시간과 대기 시간의 차이!
+			currentTime += process_head[minTime].burstTime;
+			process_head[minTime].turnaroundTume = currentTime;
+			process_head[minTime].remainTime = 0;
+			currentTime++;
+			
+			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+		}
 	}
 };
+
 class SJF : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ SJF ]" << std::endl;
 		ChangeTextColor(15);
@@ -112,7 +254,7 @@ public:
 };
 class NP_Priority : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ 비선점 Priority ]" << std::endl;
 		ChangeTextColor(15);
@@ -121,7 +263,7 @@ public:
 };
 class P_Priority : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ 선점 Priority ]" << std::endl;
 		ChangeTextColor(15);
@@ -130,7 +272,7 @@ public:
 };
 class RR : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ RR ]" << std::endl;
 		ChangeTextColor(15);
@@ -139,7 +281,7 @@ public:
 };
 class SRT : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ SRT ]" << std::endl;
 		ChangeTextColor(15);
@@ -148,7 +290,7 @@ public:
 };
 class HRN : public Scheduler {
 public:
-	void PrintResult() {
+	void Sceduling() {
 		ChangeTextColor(11);
 		cout << " [ HRN ]" << std::endl;
 		ChangeTextColor(15);
@@ -220,19 +362,10 @@ int main() {
 
 		system("cls");
 		scheduler->PrintData();
-		cout << "\n" << std::endl;
-		cout << "타임 슬라이스 크기 >>";
-		cin >> input;
-		scheduler->SetTimeSlice(input);
+		scheduler->Sceduling();
+		scheduler->PrintTable();
+		scheduler->DrawGanttChart();
 		
-		system("cls");
-
-		ChangeTextColor(8);
-		scheduler->PrintData();
-		cout << "  time slice: " << scheduler->GetTimeSlice() << std::endl;
-		ChangeTextColor(15);
-
-		scheduler->PrintResult();
 
 		ChangeTextColor(13);
 		cout << "\n\n\t\tMenu: 'z', Quit: esc" << std::endl;
