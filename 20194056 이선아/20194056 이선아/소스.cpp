@@ -8,6 +8,7 @@ using namespace std;
 
 void PrintMenu(int);
 void ChangeTextColor(int);
+void ChangeBackgroundColor(int);
 
 struct Process {
 	int PID = 0;
@@ -119,64 +120,33 @@ public:
 	}
 	void DrawGanttChart() {
 		int currentTime = 0;
-		int colorValue[] = { 10, 11, 12, 13, 14 };
-		int colorTop = 0;
-		int colorLength = 5;
+		int colorValue[] = { 10, 11, 12, 13, 14, 15 };
+		int colorLength = 6;
 
 		GanttData* p = gantt_head;
-		// |-------|----
-		// |  P 1  | 
-		// |-------|----
-		// 0       5
+		// |[  P1  ]|----
+		// 0      5
 		
-		while(p!=NULL){
 		cout << "|";
 		while (p != NULL) {
-			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << "-";
-			cout << "--";
+			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			printf("P%02d", p->PID);
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
 			p = p->next;
-			ChangeTextColor(8);
+			ChangeBackgroundColor(0);
 			cout << "|";
 		}
 		
-		p = gantt_head;
-		colorTop = 0;
-		ChangeTextColor(15);
-		cout << "\n|";
-		while (p != NULL) {
-			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
-			for (int i = 0; i < p->runTime / 2; i = i + 2)	cout << " ";
-			printf("P%d", p->PID);
-			for (int i = 0; i < p->runTime / 2; i = i + 2)	cout << " ";
-			p = p->next;
-			ChangeTextColor(8);
-			cout << "|";
-		}
-
-		p = gantt_head;
-		colorTop = 0;
-		ChangeTextColor(15);
-		cout << "\n|";
-		while (p != NULL) {
-			ChangeTextColor(colorValue[(colorTop++) % colorLength]);
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << "-";
-			cout << "--";
-			p = p->next;
-			ChangeTextColor(8);
-			cout << "|";
-		}
-
 		// 시간 표시
 		p = gantt_head;
 		ChangeTextColor(15);
 		cout << "\n0";
 		while (p != NULL) {
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			for (int i = 0; i < p->runTime - (p->runTime % 2); i++)	cout << " ";
 			currentTime += p->runTime;
-			printf("  %2d", currentTime);
+			printf("  %02d", currentTime);
 			p = p->next;
-		}
 		}
 		cout << std::endl;
 
@@ -246,54 +216,34 @@ public:
 class SJF : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ SJF ]" << std::endl;
-		ChangeTextColor(15);
-
 	}
 };
 class NP_Priority : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ 비선점 Priority ]" << std::endl;
-		ChangeTextColor(15);
-
 	}
 };
 class P_Priority : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ 선점 Priority ]" << std::endl;
-		ChangeTextColor(15);
 
 	}
 };
 class RR : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ RR ]" << std::endl;
-		ChangeTextColor(15);
 
 	}
 };
 class SRT : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ SRT ]" << std::endl;
-		ChangeTextColor(15);
 
 	}
 };
 class HRN : public Scheduler {
 public:
 	void Sceduling() {
-		ChangeTextColor(11);
-		cout << " [ HRN ]" << std::endl;
-		ChangeTextColor(15);
 
 	}
 };
@@ -329,6 +279,14 @@ void ChangeTextColor(int fg) {
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(handle, fg);
 }
+void ChangeBackgroundColor(int bg) {
+	int fg;
+	if (bg <= 9)	fg = 15;
+	else			fg = 0;
+	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(handle, (bg << 4) | fg);
+}
+
 
 int main() {
 	int selectMenu = 0;
