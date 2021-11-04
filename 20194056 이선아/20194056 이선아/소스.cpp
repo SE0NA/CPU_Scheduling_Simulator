@@ -72,7 +72,7 @@ public:
 	~Scheduler() {
 		free(process_head);
 	}
-	
+
 	void PrintData() {
 		cout << " +-----+----------+----------+----------+" << std::endl;
 		cout << " | PID | 도착시간 | 실행시간 | 우선순위 |" << std::endl;
@@ -124,14 +124,14 @@ public:
 		int colorLength = 6;
 
 		GanttData* p = gantt_head;
-		// |[  P1  ]|----
-		// 0      5
+		// |[  P1  ]|[
+		// 0        5
 		
 		cout << "|";
 		while (p != NULL) {
 			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
-			printf("P%02d", p->PID);
+			printf("P%2d", p->PID);
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
 			p = p->next;
 			ChangeBackgroundColor(0);
@@ -145,7 +145,7 @@ public:
 		while (p != NULL) {
 			for (int i = 0; i < p->runTime - (p->runTime % 2); i++)	cout << " ";
 			currentTime += p->runTime;
-			printf("  %02d", currentTime);
+			printf("  %2d", currentTime);
 			p = p->next;
 		}
 		cout << std::endl;
@@ -170,17 +170,19 @@ public:
 		return head->next;
 	}
 
+	virtual void SchedulerName() = 0;
 	virtual void Sceduling() = 0;
 };
 
 class FCFS : public Scheduler {
 public:
-	void Sceduling() {
-		// 도착한 순서대로 CPU를 할당 - 비선점형
+	void SchedulerName() {
 		ChangeTextColor(11);
 		cout << " [ FCFS ]" << std::endl;
 		ChangeTextColor(15);
-
+	}
+	void Sceduling() {
+		// 도착한 순서대로 CPU를 할당 - 비선점형
 		GanttData* p = NULL;
 
 		int currentTime = 0;
@@ -206,7 +208,6 @@ public:
 			currentTime += process_head[minTime].burstTime;
 			process_head[minTime].turnaroundTume = currentTime;
 			process_head[minTime].remainTime = 0;
-			currentTime++;
 			
 			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
 		}
@@ -215,34 +216,46 @@ public:
 
 class SJF : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 	}
 };
 class NP_Priority : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 	}
 };
 class P_Priority : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 
 	}
 };
 class RR : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 
 	}
 };
 class SRT : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 
 	}
 };
 class HRN : public Scheduler {
 public:
+	void SchedulerName() {
+	}
 	void Sceduling() {
 
 	}
@@ -319,9 +332,17 @@ int main() {
 		else if (selectMenu == 6)	scheduler = new HRN();
 
 		system("cls");
+		ChangeTextColor(8);
 		scheduler->PrintData();
+		cout << std::endl;
+
 		scheduler->Sceduling();
+
+		scheduler->SchedulerName();
+
 		scheduler->PrintTable();
+		cout << std::endl;
+
 		scheduler->DrawGanttChart();
 		
 
