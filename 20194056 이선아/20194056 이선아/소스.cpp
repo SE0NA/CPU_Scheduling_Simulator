@@ -229,30 +229,30 @@ public:
 		GanttData* p = NULL;
 
 		int currentTime = 0;
-		int minTime = 0;
+		int next = 0;
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 설정
 			for(int j=0;j<processCnt;j++)
 				if (process_head[j].remainTime != 0) {
-					minTime = j;
+					next = j;
 					break;
 				}
 			
 			for (int j = 0; j < processCnt; j++) {
 				if (process_head[j].remainTime != 0) {
-					if (process_head[j].arrivedTime <= process_head[minTime].arrivedTime) {
+					if (process_head[j].arrivedTime <= process_head[next].arrivedTime) {
 						// 도착 시간이 가장 빠른 프로세스 구하기
-						minTime = j;
+						next = j;
 					}
 				}
 			}
-			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
-			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 잘 모르겟다 응답시간과 대기 시간의 차이!
-			currentTime += process_head[minTime].burstTime;
-			process_head[minTime].turnaroundTume = currentTime;
-			process_head[minTime].remainTime = 0;
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			process_head[next].responseTime = process_head[next].waitingTime;	// 잘 모르겟다 응답시간과 대기 시간의 차이!
+			currentTime += process_head[next].burstTime;
+			process_head[next].turnaroundTume = currentTime;
+			process_head[next].remainTime = 0;
 			
-			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
 		}
 	}
 };
@@ -269,13 +269,13 @@ public:
 		GanttData* p = NULL;
 
 		int currentTime = 0;
-		int minTime = 0;
+		int next = 0;
 	
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 구하기
 			for (int i = 0; i < processCnt; i++) {
 				if (process_head[i].remainTime != 0) {
-					minTime = i;
+					next = i;
 					break;
 				}
 			}
@@ -283,19 +283,19 @@ public:
 			for (int i = 0; i < processCnt; i++) {
 				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
 				if (process_head[i].remainTime!=0 && process_head[i].arrivedTime <= currentTime) {
-					// 해당 프로세스의 실행시간은 minTime의 실행시간보다 작은가?
-					if (process_head[i].burstTime <= process_head[minTime].burstTime)
-						minTime = i;
+					// 해당 프로세스의 실행시간은 next의 실행시간보다 작은가?
+					if (process_head[i].burstTime <= process_head[next].burstTime)
+						next = i;
 				}
 			}
 
-			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
-			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
-			currentTime += process_head[minTime].burstTime;
-			process_head[minTime].turnaroundTume = currentTime;
-			process_head[minTime].remainTime = 0;
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			currentTime += process_head[next].burstTime;
+			process_head[next].turnaroundTume = currentTime;
+			process_head[next].remainTime = 0;
 
-			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
 		}
 	}
 };
@@ -311,13 +311,13 @@ public:
 		GanttData* p = NULL;
 
 		int currentTime = 0;
-		int minTime = 0;
+		int next = 0;
 
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 구하기
 			for (int i = 0; i < processCnt; i++) {
 				if (process_head[i].remainTime != 0) {
-					minTime = i;
+					next = i;
 					break;
 				}
 			}
@@ -325,19 +325,19 @@ public:
 			for (int i = 0; i < processCnt; i++) {
 				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
 				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
-					// 해당 프로세스의 우선순위는 minTime의 우선순위보다 높은가?
-					if (process_head[i].priority <= process_head[minTime].priority)
-						minTime = i;
+					// 해당 프로세스의 우선순위는 next의 우선순위보다 높은가?
+					if (process_head[i].priority <= process_head[next].priority)
+						next = i;
 				}
 			}
 
-			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
-			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
-			currentTime += process_head[minTime].burstTime;
-			process_head[minTime].turnaroundTume = currentTime;
-			process_head[minTime].remainTime = 0;
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			currentTime += process_head[next].burstTime;
+			process_head[next].turnaroundTume = currentTime;
+			process_head[next].remainTime = 0;
 
-			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
 		}
 	}
 };
@@ -368,9 +368,50 @@ public:
 class HRN : public Scheduler {
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ HRN ]" << std::endl;
+		ChangeTextColor(15);
 	}
-	void Sceduling() {
 
+	float GetHRNPriority(Process p, int currentTime) {
+		return(((float)(currentTime - p.arrivedTime) + p.burstTime) / p.burstTime);
+	}
+
+	void Sceduling() {
+		// 기다린 시간과 CPU 사용시간을 고려하여 선택 - 비선점형
+		// 우선순위 = (대기시간+CPU사용시간)/CPU사용시간
+		// 우선순위 값이 큰 편이 먼저 실행
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		int next = 0;
+
+		for (int i = 0; i < processCnt; i++) {
+			// minTime 구하기
+			for (int i = 0; i < processCnt; i++) {
+				if (process_head[i].remainTime != 0) {
+					next = i;
+					break;
+				}
+			}
+
+			for (int i = 0; i < processCnt; i++) {
+				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
+					// 해당 프로세스의 우선순위는 next의 우선순위보다 높은가?
+					if (GetHRNPriority(process_head[i], currentTime) >= GetHRNPriority(process_head[next], currentTime))
+						next = i;
+				}
+			}
+
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			currentTime += process_head[next].burstTime;
+			process_head[next].turnaroundTume = currentTime;
+			process_head[next].remainTime = 0;
+
+			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
+		}
 	}
 };
 
@@ -456,13 +497,13 @@ int main() {
 		cout << std::endl << std::endl;
 
 		scheduler->Sceduling();
-		
+
 		scheduler->SchedulerName();
 		cout << std::endl;
 		scheduler->DrawGanttChart();
 		cout << std::endl;
 		scheduler->PrintTable();
-		
+
 		ChangeTextColor(13);
 		cout << "\n\n\t\tBack: 'z', Quit: esc" << std::endl;
 		ChangeTextColor(15);
@@ -474,5 +515,5 @@ int main() {
 			continue;
 		else if (input == 27)
 			break;
-	}	
+	}
 }
