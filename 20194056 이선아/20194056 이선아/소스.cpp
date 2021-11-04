@@ -153,14 +153,26 @@ public:
 		int colorLength = 6;
 
 		GanttData* p = gantt_head;
-		// |[  P1  ]|[
+		//     P1
+		// |[      ]|[
 		// 0        5
 		
+		cout << " ";
+		while (p != NULL) {
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			printf("P%2d", p->PID);
+			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			p = p->next;
+			cout << " ";
+		}
+		cout << std::endl;
+
+		p = gantt_head;
 		cout << "|";
 		while (p != NULL) {
 			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
-			printf("P%2d", p->PID);
+			printf("   ", p->PID);
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
 			p = p->next;
 			ChangeBackgroundColor(0);
