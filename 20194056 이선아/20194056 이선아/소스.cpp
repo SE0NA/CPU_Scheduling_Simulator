@@ -160,9 +160,9 @@ public:
 
 		cout << "  ";
 		while (p != NULL) {
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
 			printf("P%2d", p->PID);
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
 			p = p->next;
 			cout << " ";
 		}
@@ -172,9 +172,9 @@ public:
 		cout << " |";
 		while (p != NULL) {
 			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
 			printf("   ", p->PID);
-			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
+			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
 			p = p->next;
 			ChangeBackgroundColor(0);
 			cout << "|";
