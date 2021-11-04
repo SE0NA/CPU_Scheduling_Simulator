@@ -100,24 +100,53 @@ public:
 		float sum_turnaround = 0;
 
 		// 대기시간, 응답시간, 반환시간
-		// 각 프로세스
-		cout << " +-----+----------+----------+----------+" << std::endl;
-		cout << " | PID | 대기시간 | 응답시간 | 반환시간 |" << std::endl;
-		cout << " +-----+----------+----------+----------+" << std::endl;
 
+		cout << "+----------+";
 		for (int i = 0; i < processCnt; i++) {
-			printf(" | %3d | %8d | %8d | %8d |\n", process_head[i].PID, process_head[i].waitingTime, process_head[i].responseTime, process_head[i].turnaroundTume);
+			cout << "-----+";
+		}
+		cout << "------+" << std::endl;
+
+		cout << "|          |";
+		for (int i = 0; i < processCnt; i++) {
+			printf(" P%2d |", process_head[i].PID);
+		}
+		cout << " 평균 |" << std::endl;
+
+		cout << "+----------+";
+		for (int i = 0; i < processCnt; i++) {
+			cout << "-----+";
+		}
+		cout << "------+" << std::endl;
+
+		cout << "| 대기시간 |";
+		for (int i = 0; i < processCnt; i++) {
+			printf(" %3d |", process_head[i].waitingTime);
 			sum_wait += process_head[i].waitingTime;
+		}
+		printf(" %4.1f |\n", sum_wait / processCnt);
+
+		cout << "| 응답시간 |";
+		for (int i = 0; i < processCnt; i++) {
+			printf(" %3d |", process_head[i].responseTime);
 			sum_response += process_head[i].responseTime;
+		}
+		printf(" %4.1f |\n", sum_response / processCnt);
+
+		cout << "| 반환시간 |";
+		for (int i = 0; i < processCnt; i++) {
+			printf(" %3d |", process_head[i].turnaroundTume);
 			sum_turnaround += process_head[i].turnaroundTume;
 		}
-		cout << " +-----+----------+----------+----------+\n" << std::endl;
+		printf(" %4.1f |\n", sum_turnaround / processCnt);
 
-		// 평균
-		cout << " 평균 대기시간 AWT: " << sum_wait << " / " << processCnt << " = " << sum_wait / processCnt << std::endl;
-		cout << " 평균 응답시간 ART: " << sum_response << " / " << processCnt << " = " << sum_response / processCnt << std::endl;
-		cout << " 평균 반환시간 ATT: " << sum_turnaround << " / " << processCnt << " = " << sum_turnaround / processCnt << std::endl;
+		cout << "+----------+";
+		for (int i = 0; i < processCnt; i++) {
+			cout << "-----+";
+		}
+		cout << "------+" << std::endl;
 	}
+
 	void DrawGanttChart() {
 		int currentTime = 0;
 		int colorValue[] = { 10, 11, 12, 13, 14, 15 };
@@ -217,8 +246,40 @@ public:
 class SJF : public Scheduler {
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ SJF ]" << std::endl;
+		ChangeTextColor(15);
 	}
 	void Sceduling() {
+		// 실행 시간이 가장 짧은 작업부터 CPU 할당 - 비선점형
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		int minTime = 0;
+		for (int i = 0; i < processCnt; i++) {
+			// minTime 설정
+			for (int j = 0; j < processCnt; j++)
+				if (process_head[j].remainTime != 0) {
+					minTime = j;
+					break;
+				}
+
+			for (int j = 0; j < processCnt; j++) {
+				if (process_head[j].remainTime != 0) {
+					if (process_head[j].burstTime <= process_head[minTime].burstTime) {
+						// 실행 시간이 가장 짧은 프로세스 구하기
+						minTime = j;
+					}
+				}
+			}
+			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
+			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
+			currentTime += process_head[minTime].burstTime;
+			process_head[minTime].turnaroundTume = currentTime;
+			process_head[minTime].remainTime = 0;
+
+			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+		}
 	}
 };
 class NP_Priority : public Scheduler {
@@ -339,11 +400,11 @@ int main() {
 		scheduler->Sceduling();
 
 		scheduler->SchedulerName();
-
-		scheduler->PrintTable();
+		
+		scheduler->DrawGanttChart();
 		cout << std::endl;
 
-		scheduler->DrawGanttChart();
+		scheduler->PrintTable();
 		
 
 		ChangeTextColor(13);
