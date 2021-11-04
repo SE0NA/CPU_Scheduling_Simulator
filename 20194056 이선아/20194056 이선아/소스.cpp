@@ -256,7 +256,6 @@ public:
 		}
 	}
 };
-
 class SJF : public Scheduler {
 public:
 	void SchedulerName() {
@@ -395,7 +394,7 @@ public:
 		SortByArrivedTime();
 
 		// 모든 프로세스 remainTime가 0이 되어야 종료
-		while (true) {
+		while (remainProcess > 0) {
 			if (process_head[queue[now]].remainTime != 0) {
 				process_head[queue[now]].waitingTime = currentTime - process_head[queue[now]].arrivedTime;
 				// 처음 실행된 상태
@@ -419,19 +418,65 @@ public:
 			}
 
 			now = (now + processCnt + 1) % processCnt;
-
-			// 모든 프로세스 확인
-			if (remainProcess == 0)
-				break;
 		}
 	}
 };
 class SRT : public Scheduler {
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ SRT ]" << std::endl;
+		ChangeTextColor(15);
 	}
 	void Sceduling() {
+		// 기본적으로 RR 사용, 선택시 남아있는 작업시간이 가장 적은 프로세스 선택
+		// 선점형
+		AskTimeSlice();
+		system("cls");
 
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		short next = 0;
+		int remainProcess = processCnt;
+
+		// 모든 프로세스 remainTime가 0이 되어야 종료
+		while (remainProcess > 0) {
+			for (int i = 0; i < processCnt; i++) {
+				// next 시작 선정
+				if (process_head[i].remainTime != 0) {
+					next = i;
+					break;
+				}
+			}
+
+			for (int i = 0; i < processCnt; i++) {
+				if (process_head[i].remainTime != 0) {
+					if (process_head[i].arrivedTime <= currentTime && process_head[i].remainTime < process_head[next].remainTime)
+						next = i;
+				}
+			}
+			
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			// 처음 실행된 상태
+			if (process_head[next].remainTime == process_head[next].burstTime) {
+				process_head[next].responseTime = process_head[next].waitingTime;
+			}
+			// 남은 시간과 타임슬라이스 크기 비교
+			if (timeSlice >= process_head[next].remainTime) {
+				currentTime += process_head[next].remainTime;
+				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
+				// 프로세스 종료
+				process_head[next].remainTime = 0;
+				process_head[next].turnaroundTume = currentTime;
+				remainProcess--;
+			}
+			else {
+				currentTime += timeSlice;
+				p = InsertGanttNode(p, process_head[next].PID, timeSlice);
+				process_head[next].remainTime -= timeSlice;
+			}
+		}
 	}
 };
 class HRN : public Scheduler {
