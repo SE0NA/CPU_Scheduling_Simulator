@@ -65,7 +65,8 @@ public:
 			process_head[i].burstTime = atoi(token);
 			process_head[i].remainTime = process_head[i].burstTime;
 
-			process_head[i].priority = atoi(buf);	// 마지막 데이터
+			token = strtok(NULL, "/");
+			process_head[i].priority = atoi(token);	// 마지막 데이터
 		}
 		fclose(fp);
 	}
@@ -101,46 +102,46 @@ public:
 
 		// 대기시간, 응답시간, 반환시간
 
-		cout << "+----------+";
+		cout << " +----------+";
 		for (int i = 0; i < processCnt; i++) {
 			cout << "-----+";
 		}
 		cout << "------+" << std::endl;
 
-		cout << "|          |";
+		cout << " |          |";
 		for (int i = 0; i < processCnt; i++) {
 			printf(" P%2d |", process_head[i].PID);
 		}
 		cout << " 평균 |" << std::endl;
 
-		cout << "+----------+";
+		cout << " +----------+";
 		for (int i = 0; i < processCnt; i++) {
 			cout << "-----+";
 		}
 		cout << "------+" << std::endl;
 
-		cout << "| 대기시간 |";
+		cout << " | 대기시간 |";
 		for (int i = 0; i < processCnt; i++) {
 			printf(" %3d |", process_head[i].waitingTime);
 			sum_wait += process_head[i].waitingTime;
 		}
 		printf(" %4.1f |\n", sum_wait / processCnt);
 
-		cout << "| 응답시간 |";
+		cout << " | 응답시간 |";
 		for (int i = 0; i < processCnt; i++) {
 			printf(" %3d |", process_head[i].responseTime);
 			sum_response += process_head[i].responseTime;
 		}
 		printf(" %4.1f |\n", sum_response / processCnt);
 
-		cout << "| 반환시간 |";
+		cout << " | 반환시간 |";
 		for (int i = 0; i < processCnt; i++) {
 			printf(" %3d |", process_head[i].turnaroundTume);
 			sum_turnaround += process_head[i].turnaroundTume;
 		}
 		printf(" %4.1f |\n", sum_turnaround / processCnt);
 
-		cout << "+----------+";
+		cout << " +----------+";
 		for (int i = 0; i < processCnt; i++) {
 			cout << "-----+";
 		}
@@ -149,15 +150,15 @@ public:
 
 	void DrawGanttChart() {
 		int currentTime = 0;
-		int colorValue[] = { 10, 11, 12, 13, 14, 15 };
-		int colorLength = 6;
+		int colorValue[] = { 10, 11, 12, 13, 14, 15, 9, 6, 7, 8 };
+		int colorLength = 10;
 
 		GanttData* p = gantt_head;
 		//     P1
 		// |[      ]|[
 		// 0        5
 		
-		cout << " ";
+		cout << "  ";
 		while (p != NULL) {
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
 			printf("P%2d", p->PID);
@@ -168,7 +169,7 @@ public:
 		cout << std::endl;
 
 		p = gantt_head;
-		cout << "|";
+		cout << " |";
 		while (p != NULL) {
 			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
 			for (int i = 0; i < p->runTime; i = i + 2)	cout << " ";
@@ -178,11 +179,12 @@ public:
 			ChangeBackgroundColor(0);
 			cout << "|";
 		}
-		
+		cout << "─→" << std::endl;
+
 		// 시간 표시
 		p = gantt_head;
 		ChangeTextColor(15);
-		cout << "\n0";
+		cout << " 0";
 		while (p != NULL) {
 			for (int i = 0; i < p->runTime - (p->runTime % 2); i++)	cout << " ";
 			currentTime += p->runTime;
@@ -268,22 +270,25 @@ public:
 
 		int currentTime = 0;
 		int minTime = 0;
+	
 		for (int i = 0; i < processCnt; i++) {
-			// minTime 설정
-			for (int j = 0; j < processCnt; j++)
-				if (process_head[j].remainTime != 0) {
-					minTime = j;
+			// minTime 구하기
+			for (int i = 0; i < processCnt; i++) {
+				if (process_head[i].remainTime != 0) {
+					minTime = i;
 					break;
 				}
+			}
 
-			for (int j = 0; j < processCnt; j++) {
-				if (process_head[j].remainTime != 0) {
-					if (process_head[j].burstTime <= process_head[minTime].burstTime) {
-						// 실행 시간이 가장 짧은 프로세스 구하기
-						minTime = j;
-					}
+			for (int i = 0; i < processCnt; i++) {
+				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
+				if (process_head[i].remainTime!=0 && process_head[i].arrivedTime <= currentTime) {
+					// 해당 프로세스의 실행시간은 minTime의 실행시간보다 작은가?
+					if (process_head[i].burstTime <= process_head[minTime].burstTime)
+						minTime = i;
 				}
 			}
+
 			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
 			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
 			currentTime += process_head[minTime].burstTime;
@@ -297,8 +302,40 @@ public:
 class NP_Priority : public Scheduler {
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ 비선점 Priority ]" << std::endl;
+		ChangeTextColor(15);
 	}
 	void Sceduling() {
+		// 우선순위 값이 낮은 순서대로 할당 - 비선점형
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		int minTime = 0;
+		for (int i = 0; i < processCnt; i++) {
+			// minTime 설정
+			for (int j = 0; j < processCnt; j++)
+				if (process_head[j].remainTime != 0) {
+					minTime = j;
+					break;
+				}
+
+			for (int j = 0; j < processCnt; j++) {
+				if (process_head[j].remainTime != 0) {
+					if (process_head[j].priority <= process_head[minTime].priority) {
+						// 실행 시간이 가장 짧은 프로세스 구하기
+						minTime = j;
+					}
+				}
+			}
+			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
+			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
+			currentTime += process_head[minTime].burstTime;
+			process_head[minTime].turnaroundTume = currentTime;
+			process_head[minTime].remainTime = 0;
+
+			p = InsertGanttNode(p, process_head[minTime].PID, process_head[minTime].burstTime);
+		}
 	}
 };
 class P_Priority : public Scheduler {
@@ -340,12 +377,12 @@ void PrintMenu(int num) {
 	char schedulerName[7][20] = { "FCFS      ", "SJF       ", "비선점 Priority  ",
 							      "선점 Priority    " , "RR     ", "SRT     ", "HRN" };
 
-	cout << "\n\t\t  20194056 이선아 " << std::endl;
+	cout << "\t\t 20194056 이선아 " << std::endl;
 	cout << "\t\t+===============+" << std::endl;
 	ChangeTextColor(11);
 	cout << "\t\t  CPU Scheduler" << std::endl;
 	ChangeTextColor(basicColor);
-	cout << "\t\t+===============+\n\n" << std::endl;
+	cout << "\t\t+===============+" << std::endl << std::endl;
 
 	for (int i = 0; i < 7; i++) {
 		if (i == 0 || i == 3)	cout << std::endl << std::endl << "       ";
@@ -358,7 +395,7 @@ void PrintMenu(int num) {
 		}	
 	}
 	ChangeTextColor(8);
-	cout << "\n\n\t\t Press ← → Enter key" << std::endl;
+	cout << std::endl << std::endl << "\t\tPress ← → Enter key" << std::endl;
 	ChangeTextColor(basicColor);
 }
 void ChangeTextColor(int fg) {
@@ -378,9 +415,13 @@ int main() {
 	int selectMenu = 0;
 	int input;
 
+	system("Title 20194056 이선아 - CPU Scheduling Simulator");
+	system("mode con cols=50 lines=20");
+
 	while (true) {
 		while (true) {	// 스케줄러 선택
 			system("cls");
+			cout << std::endl << std::endl << std::endl;
 			PrintMenu(selectMenu);
 			input = _getch();
 
@@ -404,23 +445,23 @@ int main() {
 		else if (selectMenu == 5)	scheduler = new SRT();
 		else if (selectMenu == 6)	scheduler = new HRN();
 
+		system("mode con cols=80 lines=30");
 		system("cls");
 		ChangeTextColor(8);
-		scheduler->PrintData();
 		cout << std::endl;
+		scheduler->PrintData();
+		cout << std::endl << std::endl;
 
 		scheduler->Sceduling();
-
-		scheduler->SchedulerName();
 		
+		scheduler->SchedulerName();
+		cout << std::endl;
 		scheduler->DrawGanttChart();
 		cout << std::endl;
-
 		scheduler->PrintTable();
 		
-
 		ChangeTextColor(13);
-		cout << "\n\n\t\tMenu: 'z', Quit: esc" << std::endl;
+		cout << "\n\n\t\tBack: 'z', Quit: esc" << std::endl;
 		ChangeTextColor(15);
 
 		delete scheduler;
