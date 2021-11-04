@@ -312,22 +312,25 @@ public:
 
 		int currentTime = 0;
 		int minTime = 0;
+
 		for (int i = 0; i < processCnt; i++) {
-			// minTime 설정
-			for (int j = 0; j < processCnt; j++)
-				if (process_head[j].remainTime != 0) {
-					minTime = j;
+			// minTime 구하기
+			for (int i = 0; i < processCnt; i++) {
+				if (process_head[i].remainTime != 0) {
+					minTime = i;
 					break;
 				}
+			}
 
-			for (int j = 0; j < processCnt; j++) {
-				if (process_head[j].remainTime != 0) {
-					if (process_head[j].priority <= process_head[minTime].priority) {
-						// 실행 시간이 가장 짧은 프로세스 구하기
-						minTime = j;
-					}
+			for (int i = 0; i < processCnt; i++) {
+				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
+					// 해당 프로세스의 우선순위는 minTime의 우선순위보다 높은가?
+					if (process_head[i].priority <= process_head[minTime].priority)
+						minTime = i;
 				}
 			}
+
 			process_head[minTime].waitingTime = currentTime - process_head[minTime].arrivedTime;
 			process_head[minTime].responseTime = process_head[minTime].waitingTime;	// 응답시간
 			currentTime += process_head[minTime].burstTime;
@@ -416,9 +419,9 @@ int main() {
 	int input;
 
 	system("Title 20194056 이선아 - CPU Scheduling Simulator");
-	system("mode con cols=50 lines=20");
-
+	
 	while (true) {
+		system("mode con cols=50 lines=20");
 		while (true) {	// 스케줄러 선택
 			system("cls");
 			cout << std::endl << std::endl << std::endl;
