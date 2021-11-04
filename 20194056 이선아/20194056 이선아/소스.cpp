@@ -350,11 +350,80 @@ public:
 	}
 };
 class RR : public Scheduler {
+private:
+	short* queue;
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ RR ]" << std::endl;
+		ChangeTextColor(15);
 	}
-	void Sceduling() {
+	
+	void SortByArrivedTime() {
+		queue = (short*)malloc(processCnt * sizeof(short));
+		short tmp;
 
+		// 기본값 저장
+		for (int i = 0; i < processCnt; i++) {
+			queue[i] = i;
+		}
+
+		for (int i = 0; i < processCnt; i++) {
+			for (int j = 0; j < processCnt - i - 1; j++) {
+				// [j]와 [j+1]중 [j+1]이 더 먼저 도착했을 때 서로 스왑
+				if (process_head[queue[j]].arrivedTime > process_head[queue[j + 1]].arrivedTime) {
+					queue[j] = tmp;
+					queue[j] = queue[j + 1];
+					queue[j + 1] = tmp;
+				}
+			}
+		}
+	}
+
+	void Sceduling() {
+		// 타임슬라이스만큼 작업하고 완료하지 못하면 준비 큐의 맨 뒤로 가서 기다리는
+		// 선점형
+		AskTimeSlice();
+		system("cls");
+		
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		short now = 0;
+		int remainProcess = processCnt;
+
+		SortByArrivedTime();
+
+		// 모든 프로세스 remainTime가 0이 되어야 종료
+		while(true) {
+			if (process_head[queue[now]].remainTime != 0) {
+				process_head[queue[now]].waitingTime = currentTime - process_head[queue[now]].arrivedTime;
+				// 처음 실행된 상태
+				if (process_head[queue[now]].remainTime == process_head[queue[now]].burstTime) {
+					process_head[queue[now]].responseTime = process_head[queue[now]].waitingTime;
+				}
+				// 남은 시간과 타임슬라이스 크기 비교
+				if (timeSlice >= process_head[queue[now]].remainTime) {
+					currentTime += process_head[queue[now]].remainTime;
+					p = InsertGanttNode(p, process_head[queue[now]].PID, process_head[queue[now]].remainTime);
+					// 프로세스 종료
+					process_head[queue[now]].remainTime = 0;
+					process_head[queue[now]].turnaroundTume = currentTime;
+					remainProcess--;
+				}
+				else {
+					currentTime += timeSlice;
+					p = InsertGanttNode(p, process_head[queue[now]].PID, timeSlice);
+					process_head[queue[now]].remainTime -= timeSlice;
+				}
+			}
+
+			now = (now + processCnt + 1) % processCnt;
+
+			// 모든 프로세스 확인
+			if (remainProcess == 0)
+				break;
+		}
 	}
 };
 class SRT : public Scheduler {
@@ -491,12 +560,14 @@ int main() {
 
 		system("mode con cols=80 lines=30");
 		system("cls");
-		ChangeTextColor(8);
 		cout << std::endl;
-		scheduler->PrintData();
-		cout << std::endl << std::endl;
 
 		scheduler->Sceduling();
+
+		ChangeTextColor(8);
+		scheduler->PrintData();
+		ChangeTextColor(15);
+		cout << std::endl << std::endl;
 
 		scheduler->SchedulerName();
 		cout << std::endl;
