@@ -343,9 +343,59 @@ public:
 class P_Priority : public Scheduler {
 public:
 	void SchedulerName() {
+		ChangeTextColor(11);
+		cout << " [ 선점 Priority ]" << std::endl;
+		ChangeTextColor(15);
 	}
 	void Sceduling() {
+		// RR에서 실행할 프로세스를 선택할 때 우선순위가 높은 순서로 실행
+		// 선점형
+		AskTimeSlice();
+		system("cls");
 
+		GanttData* p = NULL;
+
+		int currentTime = 0;
+		short next = 0;
+		int remainProcess = processCnt;
+
+		// 모든 프로세스 remainTime가 0이 되어야 종료
+		while (remainProcess > 0) {
+			for (int i = 0; i < processCnt; i++) {
+				// next 시작 선정
+				if (process_head[i].remainTime != 0) {
+					next = i;
+					break;
+				}
+			}
+
+			for (int i = 0; i < processCnt; i++) {
+				if (process_head[i].remainTime != 0) {
+					if (process_head[i].arrivedTime <= currentTime && process_head[i].priority < process_head[next].priority)
+						next = i;
+				}
+			}
+
+			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			// 처음 실행된 상태
+			if (process_head[next].remainTime == process_head[next].burstTime) {
+				process_head[next].responseTime = process_head[next].waitingTime;
+			}
+			// 남은 시간과 타임슬라이스 크기 비교
+			if (timeSlice >= process_head[next].remainTime) {
+				currentTime += process_head[next].remainTime;
+				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
+				// 프로세스 종료
+				process_head[next].remainTime = 0;
+				process_head[next].turnaroundTume = currentTime;
+				remainProcess--;
+			}
+			else {
+				currentTime += timeSlice;
+				p = InsertGanttNode(p, process_head[next].PID, timeSlice);
+				process_head[next].remainTime -= timeSlice;
+			}
+		}
 	}
 };
 class RR : public Scheduler {
