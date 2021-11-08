@@ -408,6 +408,10 @@ public:
 		ChangeTextColor(15);
 	}
 
+	~RR() {
+		free(queue);
+	}
+
 	void SortByArrivedTime() {
 		queue = (short*)malloc(processCnt * sizeof(short));
 		short tmp;
@@ -679,7 +683,8 @@ int main() {
 		input = _getch();
 		if (input == 'z')
 			continue;
-		else if (input == 27)
+		else if (input == 27)	// ESC
 			break;
 	}
+	return;
 }
