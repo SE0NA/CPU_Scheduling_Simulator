@@ -586,28 +586,23 @@ public:
 void PrintMenu(int num) {
 	int basicColor = 15;
 
-	char schedulerName[7][20] = { "FCFS      ", "SJF       ", "비선점 Priority  ",
-								  "선점 Priority    " , "RR     ", "SRT     ", "HRN" };
+	char schedulerName[7][20] = { "      FCFS     ", "      SJF      ", "비선점 Priority"
+								, " 선점 Priority ", "       RR      ", "      SRT      "
+								, "      HRN      "};
 
 	cout << "\t\t 20194056 이선아 " << std::endl;
 	cout << "\t\t+===============+" << std::endl;
-	ChangeTextColor(11);
+	ChangeTextColor(6);
 	cout << "\t\t  CPU Scheduler" << std::endl;
 	ChangeTextColor(basicColor);
 	cout << "\t\t+===============+" << std::endl << std::endl;
 
-	for (int i = 0; i < 7; i++) {
-		if (i == 0 || i == 3)	cout << std::endl << std::endl << "       ";
-		if (i == num) {
-			ChangeTextColor(6);
-		}
-		cout << schedulerName[i];
-		if (i == num) {
-			ChangeTextColor(basicColor);
-		}
-	}
+	cout << "\n\n              ";
+	ChangeTextColor(11);
+	cout << "◀ " << schedulerName[num] << " ▶";
+
 	ChangeTextColor(8);
-	cout << std::endl << std::endl << "\t\tPress ← → Enter key" << std::endl;
+	cout << std::endl << std::endl << std::endl << "              Press ← → Enter key" << std::endl;
 	ChangeTextColor(basicColor);
 }
 void ChangeTextColor(int fg) {
@@ -686,5 +681,5 @@ int main() {
 		else if (input == 27)	// ESC
 			break;
 	}
-	return;
+	return 0;
 }
