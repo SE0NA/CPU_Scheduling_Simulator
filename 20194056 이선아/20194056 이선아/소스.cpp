@@ -36,7 +36,7 @@ protected:
 
 public:
 	Scheduler() {
-		FILE *fp = fopen("data.txt", "r");
+		FILE *fp = fopen("data2.txt", "r");
 		if (fp == NULL) {
 			ChangeTextColor(12);
 			cout << "\n\nFile Not Found!\n" << std::endl;
@@ -401,6 +401,7 @@ public:
 class RR : public Scheduler {
 private:
 	short* queue;
+	short* lastProcessTime;
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
@@ -408,8 +409,15 @@ public:
 		ChangeTextColor(15);
 	}
 
+	RR() {
+		lastProcessTime = (short*)malloc(processCnt * sizeof(processCnt));
+		for (int i = 0; i < processCnt; i++)
+			lastProcessTime[i] = 0;
+	}
+
 	~RR() {
 		free(queue);
+		free(lastProcessTime);
 	}
 
 	void SortByArrivedTime() {
@@ -450,7 +458,11 @@ public:
 		// 모든 프로세스 remainTime가 0이 되어야 종료
 		while (remainProcess > 0) {
 			if (process_head[queue[now]].remainTime != 0) {
-				process_head[queue[now]].waitingTime = currentTime - process_head[queue[now]].arrivedTime;
+				if (lastProcessTime[queue[now]] == 0)
+					process_head[queue[now]].waitingTime = currentTime - process_head[queue[now]].arrivedTime;
+				else
+					process_head[queue[now]].waitingTime += currentTime - lastProcessTime[queue[now]];
+
 				// 처음 실행된 상태
 				if (process_head[queue[now]].remainTime == process_head[queue[now]].burstTime) {
 					process_head[queue[now]].responseTime = process_head[queue[now]].waitingTime;
@@ -469,6 +481,7 @@ public:
 					p = InsertGanttNode(p, process_head[queue[now]].PID, timeSlice);
 					process_head[queue[now]].remainTime -= timeSlice;
 				}
+				lastProcessTime[queue[now]] = currentTime;
 			}
 
 			now = (now + processCnt + 1) % processCnt;
