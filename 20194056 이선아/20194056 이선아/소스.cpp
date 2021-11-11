@@ -489,12 +489,20 @@ public:
 	}
 };
 class SRT : public Scheduler {
+private:
+	short* lastProcessTime;
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
 		cout << " [ SRT ]" << std::endl;
 		ChangeTextColor(15);
 	}
+	SRT() {
+		lastProcessTime = (short*)malloc(processCnt * sizeof(short));
+		for (int i = 0; i < processCnt; i++)
+			lastProcessTime[i] = 0;
+	}
+
 	void Sceduling() {
 		// 기본적으로 RR 사용, 선택시 남아있는 작업시간이 가장 적은 프로세스 선택
 		// 선점형
@@ -524,7 +532,11 @@ public:
 				}
 			}
 			
-			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			if (lastProcessTime[next] == 0)
+				process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
+			else
+				process_head[next].waitingTime += currentTime - lastProcessTime[next];
+
 			// 처음 실행된 상태
 			if (process_head[next].remainTime == process_head[next].burstTime) {
 				process_head[next].responseTime = process_head[next].waitingTime;
@@ -543,6 +555,7 @@ public:
 				p = InsertGanttNode(p, process_head[next].PID, timeSlice);
 				process_head[next].remainTime -= timeSlice;
 			}
+			lastProcessTime[next] = currentTime;
 		}
 	}
 };
