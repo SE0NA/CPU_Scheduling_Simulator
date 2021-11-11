@@ -503,6 +503,10 @@ public:
 			lastProcessTime[i] = 0;
 	}
 
+	~SRT() {
+		free(lastProcessTime);
+	}
+
 	void Sceduling() {
 		// 기본적으로 RR 사용, 선택시 남아있는 작업시간이 가장 적은 프로세스 선택
 		// 선점형
@@ -678,7 +682,7 @@ int main() {
 		else if (selectMenu == 5)	scheduler = new SRT();
 		else if (selectMenu == 6)	scheduler = new HRN();
 
-		system("mode con cols=80 lines=30");
+		system("mode con cols=100 lines=30");
 		system("cls");
 		cout << std::endl;
 
