@@ -17,7 +17,7 @@ struct Process {
 	int waitingTime = 0;
 	int responseTime = 0;
 	int burstTime = 0;
-	int turnaroundTume = 0;
+	int turnaroundTime = 0;
 	int remainTime = 0;
 };
 
@@ -36,7 +36,7 @@ protected:
 
 public:
 	Scheduler() {
-		FILE *fp = fopen("data2.txt", "r");
+		FILE *fp = fopen("data.txt", "r");
 		if (fp == NULL) {
 			ChangeTextColor(12);
 			cout << "\n\nFile Not Found!\n" << std::endl;
@@ -136,8 +136,8 @@ public:
 
 		cout << " | 반환시간 |";
 		for (int i = 0; i < processCnt; i++) {
-			printf(" %3d |", process_head[i].turnaroundTume);
-			sum_turnaround += process_head[i].turnaroundTume;
+			printf(" %3d |", process_head[i].turnaroundTime);
+			sum_turnaround += process_head[i].turnaroundTime;
 		}
 		printf(" %4.1f |\n", sum_turnaround / processCnt);
 
@@ -249,7 +249,7 @@ public:
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].responseTime = process_head[next].waitingTime;	// 잘 모르겟다 응답시간과 대기 시간의 차이!
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTume = currentTime;
+			process_head[next].turnaroundTime = currentTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -291,7 +291,7 @@ public:
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTume = currentTime;
+			process_head[next].turnaroundTime = currentTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -333,7 +333,7 @@ public:
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTume = currentTime;
+			process_head[next].turnaroundTime = currentTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -387,7 +387,7 @@ public:
 				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
 				// 프로세스 종료
 				process_head[next].remainTime = 0;
-				process_head[next].turnaroundTume = currentTime;
+				process_head[next].turnaroundTime = currentTime;
 				remainProcess--;
 			}
 			else {
@@ -473,7 +473,7 @@ public:
 					p = InsertGanttNode(p, process_head[queue[now]].PID, process_head[queue[now]].remainTime);
 					// 프로세스 종료
 					process_head[queue[now]].remainTime = 0;
-					process_head[queue[now]].turnaroundTume = currentTime;
+					process_head[queue[now]].turnaroundTime = currentTime;
 					remainProcess--;
 				}
 				else {
@@ -551,7 +551,7 @@ public:
 				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
 				// 프로세스 종료
 				process_head[next].remainTime = 0;
-				process_head[next].turnaroundTume = currentTime;
+				process_head[next].turnaroundTime = currentTime;
 				remainProcess--;
 			}
 			else {
@@ -605,7 +605,7 @@ public:
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTume = currentTime;
+			process_head[next].turnaroundTime = currentTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
