@@ -471,6 +471,7 @@ public:
 					// 처음 실행 X → 마지막 실행 ~ 이번 실행 = 대기 시간에 추가
 					process_head[queue[now]].waitingTime += currentTime - lastProcessTime[queue[now]];
 				}
+
 				// 남은 시간과 타임슬라이스 크기 비교
 				if (timeSlice >= process_head[queue[now]].remainTime) {
 					currentTime += process_head[queue[now]].remainTime;
@@ -536,8 +537,8 @@ public:
 			}
 
 			for (int i = 0; i < processCnt; i++) {
-				if (process_head[i].remainTime != 0) {
-					if (process_head[i].arrivedTime <= currentTime && process_head[i].remainTime < process_head[next].remainTime)
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
+					if (process_head[i].remainTime < process_head[next].remainTime)
 						next = i;
 				}
 			}
@@ -557,7 +558,7 @@ public:
 				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
 				// 프로세스 종료
 				process_head[next].remainTime = 0;
-				process_head[next].turnaroundTime = currentTime;
+				process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 				remainProcess--;
 			}
 			else {
