@@ -173,7 +173,7 @@ public:
 		while (p != NULL) {
 			ChangeBackgroundColor(colorValue[p->PID%colorLength]);		// 배경색으로 차트 표현
 			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
-			printf("   ", p->PID);
+			printf("   ");
 			for (int i = 0; i < p->runTime - (p->runTime % 2); i = i + 2)	cout << " ";
 			p = p->next;
 			ChangeBackgroundColor(0);
@@ -407,7 +407,7 @@ private:
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
-		cout << " [ RR ]";
+		cout << " [ RR ] ";
 		ChangeTextColor(6);
 		cout << "timeSlice: " << timeSlice << std::endl;
 		ChangeTextColor(15);
@@ -499,7 +499,7 @@ private:
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
-		cout << " [ SRT ]";
+		cout << " [ SRT ] ";
 		ChangeTextColor(6);
 		cout << "timeSlice: " << timeSlice << std::endl;
 		ChangeTextColor(15);
@@ -530,7 +530,7 @@ public:
 		while (remainProcess > 0) {
 			for (int i = 0; i < processCnt; i++) {
 				// next 시작 선정
-				if (process_head[i].remainTime != 0) {
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					next = i;
 					break;
 				}
@@ -543,15 +543,14 @@ public:
 				}
 			}
 			
-			if (lastProcessTime[next] == 0)
+			if (lastProcessTime[next] == 0) {	// 처음 실행된 상태
 				process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
-			else
-				process_head[next].waitingTime += currentTime - lastProcessTime[next];
-
-			// 처음 실행된 상태
-			if (process_head[next].remainTime == process_head[next].burstTime) {
-				process_head[next].responseTime = process_head[next].waitingTime;
+				process_head[next].responseTime = currentTime - process_head[next].arrivedTime;
 			}
+			else {
+				process_head[next].waitingTime += currentTime - lastProcessTime[next];
+			}
+
 			// 남은 시간과 타임슬라이스 크기 비교
 			if (timeSlice >= process_head[next].remainTime) {
 				currentTime += process_head[next].remainTime;
@@ -594,7 +593,7 @@ public:
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 구하기
 			for (int i = 0; i < processCnt; i++) {
-				if (process_head[i].remainTime != 0) {
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					next = i;
 					break;
 				}
@@ -610,9 +609,9 @@ public:
 			}
 
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
-			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			process_head[next].responseTime = process_head[next].waitingTime;
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTime = currentTime;
+			process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
