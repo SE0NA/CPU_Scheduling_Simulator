@@ -247,9 +247,9 @@ public:
 				}
 			}
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
-			process_head[next].responseTime = process_head[next].waitingTime;	// 잘 모르겟다 응답시간과 대기 시간의 차이!
+			process_head[next].responseTime = process_head[next].waitingTime;
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTime = currentTime;
+			process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -273,14 +273,14 @@ public:
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 구하기
 			for (int i = 0; i < processCnt; i++) {
-				if (process_head[i].remainTime != 0) {
+				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					next = i;
 					break;
 				}
 			}
 
 			for (int i = 0; i < processCnt; i++) {
-				// 끝나지 않은 프로세스 중, 현재시점에서 이미 도착한 프로세스
 				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					// 해당 프로세스의 실행시간은 next의 실행시간보다 작은가?
 					if (process_head[i].burstTime <= process_head[next].burstTime)
@@ -289,9 +289,9 @@ public:
 			}
 
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
-			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			process_head[next].responseTime = process_head[next].waitingTime;
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTime = currentTime;
+			process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -315,7 +315,7 @@ public:
 		for (int i = 0; i < processCnt; i++) {
 			// minTime 구하기
 			for (int i = 0; i < processCnt; i++) {
-				if (process_head[i].remainTime != 0) {
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					next = i;
 					break;
 				}
@@ -331,9 +331,9 @@ public:
 			}
 
 			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
-			process_head[next].responseTime = process_head[next].waitingTime;	// 응답시간
+			process_head[next].responseTime = process_head[next].waitingTime;
 			currentTime += process_head[next].burstTime;
-			process_head[next].turnaroundTime = currentTime;
+			process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 			process_head[next].remainTime = 0;
 
 			p = InsertGanttNode(p, process_head[next].PID, process_head[next].burstTime);
@@ -344,7 +344,9 @@ class P_Priority : public Scheduler {
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
-		cout << " [ 선점 Priority ]" << std::endl;
+		cout << " [ 선점 Priority ] ";
+		ChangeTextColor(6);
+		cout << "timeSlice: " << timeSlice << std::endl;
 		ChangeTextColor(15);
 	}
 	void Sceduling() {
@@ -363,31 +365,31 @@ public:
 		while (remainProcess > 0) {
 			for (int i = 0; i < processCnt; i++) {
 				// next 시작 선정
-				if (process_head[i].remainTime != 0) {
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
 					next = i;
 					break;
 				}
 			}
 
 			for (int i = 0; i < processCnt; i++) {
-				if (process_head[i].remainTime != 0) {
-					if (process_head[i].arrivedTime <= currentTime && process_head[i].priority < process_head[next].priority)
+				if (process_head[i].remainTime != 0 && process_head[i].arrivedTime <= currentTime) {
+					if (process_head[i].priority < process_head[next].priority)
 						next = i;
 				}
 			}
 
-			process_head[next].waitingTime = currentTime - process_head[next].arrivedTime;
 			// 처음 실행된 상태
 			if (process_head[next].remainTime == process_head[next].burstTime) {
-				process_head[next].responseTime = process_head[next].waitingTime;
+				process_head[next].responseTime = currentTime - process_head[next].arrivedTime;
 			}
 			// 남은 시간과 타임슬라이스 크기 비교
 			if (timeSlice >= process_head[next].remainTime) {
 				currentTime += process_head[next].remainTime;
 				p = InsertGanttNode(p, process_head[next].PID, process_head[next].remainTime);
 				// 프로세스 종료
+				process_head[next].waitingTime = currentTime - process_head[next].arrivedTime - process_head[next].burstTime;
 				process_head[next].remainTime = 0;
-				process_head[next].turnaroundTime = currentTime;
+				process_head[next].turnaroundTime = currentTime - process_head[next].arrivedTime;
 				remainProcess--;
 			}
 			else {
@@ -405,7 +407,9 @@ private:
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
-		cout << " [ RR ]" << std::endl;
+		cout << " [ RR ]";
+		ChangeTextColor(6);
+		cout << "timeSlice: " << timeSlice << std::endl;
 		ChangeTextColor(15);
 	}
 
@@ -457,15 +461,15 @@ public:
 
 		// 모든 프로세스 remainTime가 0이 되어야 종료
 		while (remainProcess > 0) {
+			// 종료되지 않은 프로세스들을 queue 순서대로 실행
 			if (process_head[queue[now]].remainTime != 0) {
-				if (lastProcessTime[queue[now]] == 0)
+				if (lastProcessTime[queue[now]] == 0) {	// 처음 실행
 					process_head[queue[now]].waitingTime = currentTime - process_head[queue[now]].arrivedTime;
-				else
+					process_head[queue[now]].responseTime = currentTime - process_head[queue[now]].arrivedTime;
+				}
+				else {
+					// 처음 실행 X → 마지막 실행 ~ 이번 실행 = 대기 시간에 추가
 					process_head[queue[now]].waitingTime += currentTime - lastProcessTime[queue[now]];
-
-				// 처음 실행된 상태
-				if (process_head[queue[now]].remainTime == process_head[queue[now]].burstTime) {
-					process_head[queue[now]].responseTime = process_head[queue[now]].waitingTime;
 				}
 				// 남은 시간과 타임슬라이스 크기 비교
 				if (timeSlice >= process_head[queue[now]].remainTime) {
@@ -473,7 +477,7 @@ public:
 					p = InsertGanttNode(p, process_head[queue[now]].PID, process_head[queue[now]].remainTime);
 					// 프로세스 종료
 					process_head[queue[now]].remainTime = 0;
-					process_head[queue[now]].turnaroundTime = currentTime;
+					process_head[queue[now]].turnaroundTime = currentTime - process_head[queue[now]].arrivedTime;
 					remainProcess--;
 				}
 				else {
@@ -494,7 +498,9 @@ private:
 public:
 	void SchedulerName() {
 		ChangeTextColor(11);
-		cout << " [ SRT ]" << std::endl;
+		cout << " [ SRT ]";
+		ChangeTextColor(6);
+		cout << "timeSlice: " << timeSlice << std::endl;
 		ChangeTextColor(15);
 	}
 	SRT() {
@@ -700,15 +706,14 @@ int main() {
 		scheduler->PrintTable();
 
 		ChangeTextColor(13);
-		cout << "\n\n\t\tBack: 'z', Quit: esc" << std::endl;
+		cout << "\n\n\t\tPress Anykey | Quit: esc" << std::endl;
 		ChangeTextColor(15);
 
 		delete scheduler;
 
 		input = _getch();
-		if (input == 'z')
-			continue;
-		else if (input == 27)	// ESC
+		
+		if (input == 27)	// ESC
 			break;
 	}
 	return 0;
