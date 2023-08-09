@@ -1,7 +1,7 @@
 ### CPU 스케줄링 시뮬레이터
 
 - CPU 스케줄링 기법인 FCFS, SJF, 비선점 Priority, 선점 Priority, RR, SRT, HRN에 대한 시뮬레이션 결과를 간트차트로 출력하는 프로그램
-- 운영체제 Term project, C
+- 운영체제 Term project, C++
 
 ***
 #### 클래스 다이어그램
